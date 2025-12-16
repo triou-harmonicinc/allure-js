@@ -6,15 +6,29 @@ import { attachment, step } from "allure-js-commons";
 import type { AllureResults } from "allure-js-commons/sdk";
 import { MessageReader } from "allure-js-commons/sdk/reporter";
 
+export interface JasmineRunOptions {
+  parallel?: boolean;
+}
+
 export const runJasmineInlineTest = async (
   files: Record<string, string>,
   env?: Record<string, string>,
+  options?: JasmineRunOptions,
 ): Promise<AllureResults> => {
   const testDir = path.join(__dirname, "fixtures", randomUUID());
+  
+  // Load jasmine.json config and optionally enable parallel mode
+  let jasmineConfig = await readFile(path.join(__dirname, "./samples/spec/support/jasmine.json"), "utf8");
+  if (options?.parallel) {
+    const config = JSON.parse(jasmineConfig);
+    config.parallel = true;
+    jasmineConfig = JSON.stringify(config, null, 2);
+  }
+  
   const testFiles = {
     // package.json is used to find project root in case of absolute file paths are used
     "package.json": '{ "name": "dummy"}',
-    "spec/support/jasmine.json": await readFile(path.join(__dirname, "./samples/spec/support/jasmine.json"), "utf8"),
+    "spec/support/jasmine.json": jasmineConfig,
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     "spec/helpers/allure.js": require("./samples/spec/helpers/modern/allure.cjs"),
     ...files,

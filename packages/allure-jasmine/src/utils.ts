@@ -1,7 +1,11 @@
+import { dirname, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { extractMetadataFromString } from "allure-js-commons/sdk";
 import { getPosixPath, getRelativePath } from "allure-js-commons/sdk/reporter";
 
 import FailedExpectation = jasmine.FailedExpectation;
+
+const filename = fileURLToPath(import.meta.url);
 
 export const findAnyError = (expectations?: FailedExpectation[]): FailedExpectation | null => {
   expectations = expectations || [];
@@ -34,3 +38,6 @@ export const getAllureNamesAndLabels = (
     links,
   };
 };
+
+export const resolveParallelModeSetupFile = () =>
+  join(dirname(filename), `setupAllureJasmineParallel${extname(filename)}`);

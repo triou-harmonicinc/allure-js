@@ -42,6 +42,20 @@ When the test run completes, the result files will be generated in the `./allure
 
 You may select another location, or further customize the reporter's behavior with [the configuration options](https://allurereport.org/docs/jasmine-configuration/).
 
+### Parallel execution (Jasmine 5+)
+
+Starting with Jasmine 5, parallel test execution is supported. The Allure reporter automatically supports parallel mode through the `reporterCapabilities` API. Each worker process runs its own instance of the reporter, and test results naturally combine in the results folder.
+
+To enable parallel execution, configure your `jasmine.json`:
+
+```json
+{
+  "parallel": true
+}
+```
+
+The Allure reporter will automatically detect and handle parallel execution mode without requiring additional configuration.
+
 ### View the report
 
 > You need Allure Report to be installed on your machine to generate and open the report from the result files. See the [installation instructions](https://allurereport.org/docs/install/) on how to get it.

@@ -31,16 +31,27 @@ class AllureJasmineTestRuntime extends MessageTestRuntime {
   }
 }
 
+export interface AllureJasmineReporterConfig extends ReporterConfig {
+  isInWorker?: boolean;
+}
+
 export default class AllureJasmineReporter implements jasmine.CustomReporter {
   private readonly allureRuntime: ReporterRuntime;
   private currentAllureTestUuid?: string;
   private currentAllureFixtureUuid?: string;
   private jasmineSuitesStack: jasmine.SuiteResult[] = [];
   private scopesStack: string[] = [];
+  private readonly isInWorker: boolean;
 
-  constructor(config: ReporterConfig = {}) {
-    const { resultsDir, ...restConfig } = config;
+  // Expose reporter capabilities for Jasmine 5+ parallel mode
+  reporterCapabilities = {
+    parallel: true,
+  };
 
+  constructor(config: AllureJasmineReporterConfig = {}) {
+    const { resultsDir, isInWorker, ...restConfig } = config;
+
+    this.isInWorker = isInWorker ?? false;
     this.allureRuntime = new ReporterRuntime({
       ...restConfig,
       writer: createDefaultWriter({ resultsDir }),
@@ -197,8 +208,12 @@ export default class AllureJasmineReporter implements jasmine.CustomReporter {
   }
 
   jasmineDone(): void {
-    this.allureRuntime.writeEnvironmentInfo();
-    this.allureRuntime.writeCategoriesDefinitions();
+    // In worker mode, environment info and categories are written immediately
+    // In main process, they are written at the end
+    if (!this.isInWorker) {
+      this.allureRuntime.writeEnvironmentInfo();
+      this.allureRuntime.writeCategoriesDefinitions();
+    }
     // write global container (or any remaining scopes)
     this.scopesStack.forEach((scopeUuid) => {
       this.allureRuntime.writeScope(scopeUuid);
